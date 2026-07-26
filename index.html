@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcoverde Study - Estudo para Práticos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Ondas animadas no fundo -->
+    <div class="ocean">
+        <div class="wave"></div>
+        <div class="wave wave2"></div>
+    </div>
+
+    <!-- Tela inicial -->
+    <div id="home" class="screen active">
+        <div class="container">
+            <div class="logo">
+                <div class="ship-icon">⚓</div>
+                <h1>Arcoverde Study</h1>
+                <p class="subtitle">Sistema de Questões para Práticos - PNA</p>
+            </div>
+            <div class="categories">
+                <div class="category-card" onclick="startQuiz('resistencia')">
+                    <div class="card-icon">🚢</div>
+                    <h2>Resistência</h2>
+                    <p class="card-count" id="count-resistencia">0 questões</p>
+                </div>
+                <div class="category-card" onclick="startQuiz('propulsao')">
+                    <div class="card-icon">⚙️</div>
+                    <h2>Propulsão</h2>
+                    <p class="card-count" id="count-propulsao">0 questões</p>
+                </div>
+                <div class="category-card" onclick="startQuiz('controlabilidade')">
+                    <div class="card-icon">🧭</div>
+                    <h2>Controlabilidade</h2>
+                    <p class="card-count" id="count-controlabilidade">0 questões</p>
+                </div>
+                <div class="category-card simulado-card" onclick="startSimulado()">
+                    <div class="card-icon">📝</div>
+                    <h2>Simulado PNA</h2>
+                    <p class="card-count" id="count-simulado">65 questões mistas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de quiz -->
+    <div id="quiz" class="screen">
+        <div class="container">
+            <div class="quiz-header">
+                <button class="btn-back" onclick="goHome()">← Voltar</button>
+                <h2 id="quiz-title"></h2>
+                <div class="progress">
+                    <span id="quiz-progress">1/10</span>
+                </div>
+            </div>
+            <div class="quiz-body">
+                <div class="question-card">
+                    <p id="question-category" class="question-category"></p>
+                    <p id="question-text" class="question-text"></p>
+                    <div id="options" class="options"></div>
+                </div>
+                <div id="feedback" class="feedback hidden"></div>
+                <button id="btn-next" class="btn-next hidden" onclick="nextQuestion()">Próxima →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de resultado -->
+    <div id="result" class="screen">
+        <div class="container">
+            <div class="result-card">
+                <div class="result-icon">🎯</div>
+                <h2>Resultado Final</h2>
+                <p class="result-score" id="result-score"></p>
+                <p class="result-message" id="result-message"></p>
+                <div class="result-actions">
+                    <button class="btn-retry" onclick="retryQuiz()">Tentar Novamente</button>
+                    <button class="btn-home" onclick="goHome()">Menu Principal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
