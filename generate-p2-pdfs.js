@@ -30,7 +30,7 @@ function generateHTML(questions, title, filename) {
         questionsHTML += `
         <div class="question">
             <p class="q-number"><strong>Questão ${num}</strong></p>
-            <p class="q-text">${q.q.replace(/\n/g, '<br>')}</p>
+            <p class="q-text">${q.q.replace(/\n{3,}/g, '\n\n').replace(/\n/g, '<br>')}</p>
             <div class="options">
                 ${q.opts.map((opt, i) => `<p class="opt">${letters[i]}) ${opt}</p>`).join('\n                ')}
             </div>
@@ -53,9 +53,10 @@ function generateHTML(questions, title, filename) {
         .header p { font-size: 12pt; color: #333; }
         .question { margin-bottom: 20px; page-break-inside: avoid; }
         .q-number { font-size: 11pt; margin-bottom: 4px; }
-        .q-text { margin-bottom: 8px; text-align: justify; }
+        .q-text { margin-bottom: 8px; text-align: justify; white-space: pre-line; }
+        .q-text br + br { display: none; }
         .options { margin-left: 15px; }
-        .opt { margin-bottom: 3px; }
+        .opt { margin-bottom: 3px; white-space: pre-line; }
         .gabarito-section { page-break-before: always; border-top: 2px solid #000; padding-top: 15px; margin-top: 40px; }
         .gabarito-section h2 { text-align: center; font-size: 16pt; margin-bottom: 20px; }
         .gab-grid { column-count: 3; column-gap: 20px; }
