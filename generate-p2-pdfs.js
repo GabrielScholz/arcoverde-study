@@ -10,8 +10,16 @@ function generateHTML(questions, title, filename) {
         return true;
     });
     
-    // Remove questões sem enunciado ou sem alternativas
-    const clean = unique.filter(q => q.q && q.q.trim().length > 10 && q.opts && q.opts.length >= 2);
+    // Remove questões sem enunciado, sem alternativas, ou que dependem de imagens
+    const imagePatterns = /figura|imagem|desenho|ilustração|diagrama|gráfico|quadro abaixo|tabela abaixo|observe a|veja a|como mostrado|como demonstrado na figura/i;
+    const clean = unique.filter(q => {
+        if (!q.q || q.q.trim().length < 10) return false;
+        if (!q.opts || q.opts.length < 2) return false;
+        if (q.answer < 0) return false;
+        // Remove questões que claramente dependem de imagem
+        if (imagePatterns.test(q.q) && q.q.includes('figura')) return false;
+        return true;
+    });
     
     let questionsHTML = '';
     let gabaritoHTML = '';
