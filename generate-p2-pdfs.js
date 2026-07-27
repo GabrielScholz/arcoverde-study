@@ -10,14 +10,20 @@ function generateHTML(questions, title, filename) {
         return true;
     });
     
-    // Remove questões sem enunciado, sem alternativas, ou que dependem de imagens
+    // Remove questões sem enunciado, sem alternativas, ou que dependem de imagens/colunas
     const imagePatterns = /figura|imagem|desenho|ilustração|diagrama|gráfico|quadro abaixo|tabela abaixo|observe a|veja a|como mostrado|como demonstrado na figura/i;
+    const columnPatterns = /relacione a coluna|correlacione|COLUNA A|COLUNA B/i;
+    const vfPatterns = /\(\s+\).*\(\s+\)/;
     const clean = unique.filter(q => {
         if (!q.q || q.q.trim().length < 10) return false;
         if (!q.opts || q.opts.length < 2) return false;
         if (q.answer < 0) return false;
-        // Remove questões que claramente dependem de imagem
+        // Remove questões que dependem de imagem
         if (imagePatterns.test(q.q) && q.q.includes('figura')) return false;
+        // Remove questões de "relacione a coluna"
+        if (columnPatterns.test(q.q)) return false;
+        // Remove questões V/F com muitas lacunas (   )
+        if (vfPatterns.test(q.q)) return false;
         return true;
     });
     
