@@ -30,7 +30,7 @@ function generateHTML(questions, title, filename) {
         questionsHTML += `
         <div class="question">
             <p class="q-number"><strong>Questão ${num}</strong></p>
-            <p class="q-text">${q.q.replace(/\n{3,}/g, '\n\n').replace(/\n/g, '<br>')}</p>
+            <p class="q-text">${q.q.replace(/§/g, '').replace(/\s*\n\s*/g, '\n').replace(/\n{2,}/g, '\n').replace(/^\s+|\s+$/gm, '').replace(/\n/g, '<br>')}</p>
             <div class="options">
                 ${q.opts.map((opt, i) => `<p class="opt">${letters[i]}) ${opt}</p>`).join('\n                ')}
             </div>
