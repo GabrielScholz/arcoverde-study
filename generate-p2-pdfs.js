@@ -1,7 +1,23 @@
 const fs = require('fs');
 
+function cleanText(text) {
+    // Remove § e caracteres invisíveis
+    let clean = text.replace(/§/g, '');
+    // Substitui tabs por espaço
+    clean = clean.replace(/\t/g, ' ');
+    // Colapsa qualquer sequência de whitespace (espaços, newlines, tabs) em um único espaço
+    clean = clean.replace(/\s+/g, ' ');
+    // Agora reinsere quebras de linha antes de marcadores de itens
+    clean = clean.replace(/\s+(I\.\s)/g, '\nI. ');
+    clean = clean.replace(/\s+(II\.\s)/g, '\nII. ');
+    clean = clean.replace(/\s+(III\.\s)/g, '\nIII. ');
+    clean = clean.replace(/\s+(IV\.\s)/g, '\nIV. ');
+    clean = clean.replace(/\s+(V\.\s)/g, '\nV. ');
+    return clean.trim();
+}
+
 function generateHTML(questions, title, filename) {
-    // Remove duplicatas pelo enunciado
+    // Remove duplicatas pelo enunciado (primeiros 100 chars)
     const seen = new Set();
     const unique = questions.filter(q => {
         const key = q.q.trim().substring(0, 100);
@@ -10,20 +26,27 @@ function generateHTML(questions, title, filename) {
         return true;
     });
     
-    // Remove questões sem enunciado, sem alternativas, ou que dependem de imagens/colunas
-    const imagePatterns = /figura|imagem|desenho|ilustração|diagrama|gráfico|quadro abaixo|tabela abaixo|observe a|veja a|como mostrado|como demonstrado na figura/i;
-    const columnPatterns = /relacione a coluna|correlacione|COLUNA A|COLUNA B/i;
-    const vfPatterns = /\(\s+\).*\(\s+\)/;
+    // Padrões de exclusão
+    const imagePatterns = /figura \d|imagem abaixo|desenho abaixo|ilustração|diagrama abaixo|gráfico abaixo|como demonstrado na figura/i;
+    const columnPatterns = /relacione a coluna|correlacione.*coluna|COLUNA\s*A.*COLUNA\s*B/i;
+    const vfLacunas = /\(\s{2,}\).*\(\s{2,}\)/;
+    
     const clean = unique.filter(q => {
-        if (!q.q || q.q.trim().length < 10) return false;
+        if (!q.q || q.q.trim().length < 20) return false;
         if (!q.opts || q.opts.length < 2) return false;
         if (q.answer < 0) return false;
-        // Remove questões que dependem de imagem
-        if (imagePatterns.test(q.q) && q.q.includes('figura')) return false;
-        // Remove questões de "relacione a coluna"
-        if (columnPatterns.test(q.q)) return false;
-        // Remove questões V/F com muitas lacunas (   )
-        if (vfPatterns.test(q.q)) return false;
+        
+        const texto = q.q;
+        // Remove questões com figuras
+        if (imagePatterns.test(texto)) return false;
+        // Remove questões "relacione a coluna"
+        if (columnPatterns.test(texto)) return false;
+        // Remove questões V/F com lacunas (   ) repetidas
+        if (vfLacunas.test(texto)) return false;
+        // Remove questões que após limpeza ficam com "COLUNA A" no meio
+        const limpo = cleanText(texto);
+        if (/COLUNA\s*[AB]/i.test(limpo)) return false;
+        
         return true;
     });
     
@@ -33,12 +56,14 @@ function generateHTML(questions, title, filename) {
     
     clean.forEach((q, idx) => {
         const num = idx + 1;
+        const textoLimpo = cleanText(q.q).replace(/\n/g, '<br>');
+        
         questionsHTML += `
         <div class="question">
             <p class="q-number"><strong>Questão ${num}</strong></p>
-            <p class="q-text">${q.q.replace(/§/g, '').replace(/[\r\n]+/g, ' ').replace(/\s{2,}/g, ' ').replace(/\s*(I\.|II\.|III\.|IV\.|V\.)\s*/g, '<br>$1 ').replace(/\s*(COLUNA [AB])\s*/g, '<br><strong>$1</strong><br>').replace(/\(\s+\)/g, '(   )').trim()}</p>
+            <p class="q-text">${textoLimpo}</p>
             <div class="options">
-                ${q.opts.map((opt, i) => `<p class="opt">${letters[i]}) ${opt}</p>`).join('\n                ')}
+                ${q.opts.map((opt, i) => `<p class="opt">${letters[i]}) ${cleanText(opt)}</p>`).join('\n                ')}
             </div>
         </div>`;
         
@@ -53,16 +78,15 @@ function generateHTML(questions, title, filename) {
     <title>${title}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.4; padding: 20mm 15mm; color: #000; }
+        body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.5; padding: 20mm 15mm; color: #000; }
         .header { text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #000; }
         .header h1 { font-size: 18pt; margin-bottom: 5px; }
         .header p { font-size: 12pt; color: #333; }
-        .question { margin-bottom: 20px; page-break-inside: avoid; }
+        .question { margin-bottom: 18px; page-break-inside: avoid; }
         .q-number { font-size: 11pt; margin-bottom: 4px; }
         .q-text { margin-bottom: 8px; text-align: justify; }
-        .q-text br + br { display: none; }
-        .options { margin-left: 15px; }
-        .opt { margin-bottom: 3px; }
+        .options { margin-left: 20px; }
+        .opt { margin-bottom: 4px; }
         .gabarito-section { page-break-before: always; border-top: 2px solid #000; padding-top: 15px; margin-top: 40px; }
         .gabarito-section h2 { text-align: center; font-size: 16pt; margin-bottom: 20px; }
         .gab-grid { column-count: 3; column-gap: 20px; }
@@ -73,7 +97,7 @@ function generateHTML(questions, title, filename) {
 <body>
     <div class="header">
         <h1>Arcoverde Study — ${title}</h1>
-        <p>Total: ${clean.length} questões (${questions.length - clean.length} duplicatas removidas)</p>
+        <p>Total: ${clean.length} questões</p>
     </div>
     ${questionsHTML}
     <div class="gabarito-section">
@@ -86,7 +110,7 @@ function generateHTML(questions, title, filename) {
 </html>`;
 
     fs.writeFileSync(filename, html, 'utf8');
-    console.log(`✅ ${title}: ${clean.length} questões únicas (de ${questions.length} totais) → ${filename}`);
+    console.log(`✅ ${title}: ${clean.length} questões (removidas ${questions.length - clean.length}) → ${filename}`);
 }
 
 // Matérias da plataforma 2
